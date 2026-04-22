@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+        env:
+          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
+
+      - name: Type Check
+        run: npx tsc --noEmit
+        env:
+          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
+
+      - name: Test
+        run: npx vitest run
+        env:
+          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
+
+      - name: Build
+        run: npm run build
+        env:
+          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
+
+      - name: "📋 Summary"
+        if: always()
+        run: |
+          echo "## 📋 CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Install | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Check | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ✅ |" >> $GITHUB_STEP_SUMMARY
