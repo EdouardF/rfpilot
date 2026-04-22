@@ -1,4 +1,4 @@
-import type { RfpStatus, RfpPriority, ComplianceStatus } from '../types'
+import type { RfpStatus, RfpPriority, ComplianceStatus, Rfp } from '../types'
 
 export const RFP_STATUS_LABELS: Record<RfpStatus, string> = {
   draft: 'Draft',
@@ -58,6 +58,23 @@ export function daysUntil(dateStr: string): number {
   const target = new Date(dateStr)
   const now = new Date()
   return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+export function filterRfps(rfps: Rfp[], status?: RfpStatus, priority?: RfpPriority, query?: string): Rfp[] {
+  let result = [...rfps]
+  if (status) result = result.filter((r) => r.status === status)
+  if (priority) result = result.filter((r) => r.priority === priority)
+  if (query) { const q = query.toLowerCase(); result = result.filter((r) => r.title.toLowerCase().includes(q) || r.agency.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)) }
+  return result
+}
+
+export function sortRfps(rfps: Rfp[], sortBy: 'date' | 'priority' | 'value'): Rfp[] {
+  const result = [...rfps]
+  const priorityOrder: Record<RfpPriority, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+  if (sortBy === 'date') result.sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime())
+  else if (sortBy === 'priority') result.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+  else result.sort((a, b) => b.value - a.value)
+  return result
 }
 
 export function generateId(): string {
